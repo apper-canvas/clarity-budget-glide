@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { toast } from "react-toastify";
+import ApperIcon from "@/components/ApperIcon";
 import MonthSelector from "@/components/molecules/MonthSelector";
 import StatCard from "@/components/molecules/StatCard";
 import Error from "@/components/ui/Error";
@@ -9,15 +11,13 @@ import ExpenseForm from "@/components/organisms/ExpenseForm";
 import SpendingChart from "@/components/organisms/SpendingChart";
 import ExpenseList from "@/components/organisms/ExpenseList";
 import ComparisonChart from "@/components/organisms/ComparisonChart";
-import { formatCurrency, getMonthKey, getPreviousMonth, formatMonthYear } from "@/utils/formatters";
+import Card from "@/components/atoms/Card";
+import Button from "@/components/atoms/Button";
+import { formatCurrency, formatMonthYear, getMonthKey, getPreviousMonth } from "@/utils/formatters";
 import expenseService from "@/services/api/expenseService";
 import categoryService from "@/services/api/categoryService";
-import ApperIcon from "@/components/ApperIcon";
-import Button from "@/components/atoms/Button";
-import Card from "@/components/atoms/Card";
-import { toast } from "react-toastify";
 const Dashboard = () => {
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString());
+const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString());
   const [categories, setCategories] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [budgets, setBudgets] = useState([]);
@@ -27,16 +27,7 @@ const Dashboard = () => {
   const [aiSummary, setAiSummary] = useState(null);
   const [generatingSummary, setGeneratingSummary] = useState(false);
   const [summaryError, setSummaryError] = useState("");
-  const [apperClient, setApperClient] = useState(null);
 
-  useEffect(() => {
-    const { ApperClient } = window.ApperSDK;
-    const client = new ApperClient({
-      apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
-      apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
-    });
-    setApperClient(client);
-  }, []);
 const loadData = async () => {
     try {
       setLoading(true);
@@ -77,16 +68,10 @@ useEffect(() => {
   }, [selectedMonth]);
 
 const generateAISummary = async () => {
-    if (!apperClient) {
-      toast.error("ApperClient not initialized");
-      return;
-    }
-
     if (expenses.length === 0) {
       toast.info("No expenses to analyze for this period");
       return;
     }
-
     try {
       setGeneratingSummary(true);
       setSummaryError("");
@@ -99,7 +84,13 @@ const generateAISummary = async () => {
         };
       });
 
-      const result = await apperClient.functions.invoke(
+const { ApperClient } = window.ApperSDK;
+      const client = new ApperClient({
+        apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+        apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+      });
+      
+      const result = await client.functions.invoke(
         import.meta.env.VITE_ANALYZE_SPENDING,
         {
           body: JSON.stringify({
@@ -325,7 +316,7 @@ const totalBudget = budgets.reduce((sum, b) => sum + b.monthly_limit_c, 0);
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <ExpenseForm categories={categories} onSubmit={handleAddExpense} apperClient={apperClient} />
+<ExpenseForm categories={categories} onSubmit={handleAddExpense} />
         </motion.div>
 
         {aiSummary && (

@@ -1,12 +1,17 @@
-const { ApperClient } = window.ApperSDK;
-const apperClient = new ApperClient({
-  apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
-  apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
-});
+// ApperClient initialized globally through ApperUI.setup in App.jsx
+// Service methods use authenticated context automatically
+const getApperClient = () => {
+  const { ApperClient } = window.ApperSDK;
+  return new ApperClient({
+    apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+    apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+  });
+};
 
 const expenseService = {
   getAll: async () => {
     try {
+      const apperClient = getApperClient();
       const params = {
         fields: [
           {"field": {"Name": "amount_c"}},
@@ -43,8 +48,9 @@ const expenseService = {
     }
   },
 
-  getById: async (id) => {
+getById: async (id) => {
     try {
+      const apperClient = getApperClient();
       const params = {
         fields: [
           {"field": {"Name": "amount_c"}},
@@ -80,8 +86,9 @@ const expenseService = {
     }
   },
 
-  create: async (expenseData) => {
+create: async (expenseData) => {
     try {
+      const apperClient = getApperClient();
       const params = {
         records: [{
           amount_c: parseFloat(expenseData.amount_c),
@@ -116,8 +123,9 @@ const expenseService = {
     }
   },
 
-  update: async (id, data) => {
+update: async (id, data) => {
     try {
+      const apperClient = getApperClient();
       const updateData = {};
       if (data.amount_c !== undefined) {
         updateData.amount_c = parseFloat(data.amount_c);
@@ -157,8 +165,9 @@ const expenseService = {
     }
   },
 
-  delete: async (id) => {
+delete: async (id) => {
     try {
+      const apperClient = getApperClient();
       const params = {
         RecordIds: [parseInt(id)]
       };
@@ -184,9 +193,9 @@ const expenseService = {
       throw error;
     }
   },
-
   getByMonth: async (monthKey) => {
-    try {
+try {
+      const apperClient = getApperClient();
       const [year, month] = monthKey.split('-');
       const startDate = `${year}-${month}-01T00:00:00`;
       const endDate = new Date(parseInt(year), parseInt(month), 0);

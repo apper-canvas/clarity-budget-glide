@@ -1,12 +1,17 @@
-const { ApperClient } = window.ApperSDK;
-const apperClient = new ApperClient({
-  apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
-  apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
-});
+// ApperClient initialized globally through ApperUI.setup in App.jsx
+// Service methods use authenticated context automatically
+const getApperClient = () => {
+  const { ApperClient } = window.ApperSDK;
+  return new ApperClient({
+    apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+    apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+  });
+};
 
 const categoryService = {
   getAll: async () => {
     try {
+      const apperClient = getApperClient();
       const params = {
         fields: [
           {"field": {"Name": "name_c"}},
@@ -40,8 +45,9 @@ const categoryService = {
     }
   },
 
-  getById: async (id) => {
+getById: async (id) => {
     try {
+      const apperClient = getApperClient();
       const params = {
         fields: [
           {"field": {"Name": "name_c"}},
@@ -75,8 +81,9 @@ const categoryService = {
     }
   },
 
-  update: async (id, data) => {
+update: async (id, data) => {
     try {
+      const apperClient = getApperClient();
       const updateData = {};
       if (data.monthly_limit_c !== undefined) {
         updateData.monthly_limit_c = parseFloat(data.monthly_limit_c);
