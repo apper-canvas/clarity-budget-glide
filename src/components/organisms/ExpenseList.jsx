@@ -1,12 +1,12 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "react-toastify";
+import ApperIcon from "@/components/ApperIcon";
+import CategoryBadge from "@/components/molecules/CategoryBadge";
+import Input from "@/components/atoms/Input";
 import Card from "@/components/atoms/Card";
 import Button from "@/components/atoms/Button";
-import Input from "@/components/atoms/Input";
-import CategoryBadge from "@/components/molecules/CategoryBadge";
-import ApperIcon from "@/components/ApperIcon";
 import { formatCurrency, formatDate } from "@/utils/formatters";
-import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "react-toastify";
 
 const ExpenseList = ({ expenses, categories, onEdit, onDelete }) => {
   const [editingId, setEditingId] = useState(null);
@@ -15,37 +15,37 @@ const ExpenseList = ({ expenses, categories, onEdit, onDelete }) => {
   const [filter, setFilter] = useState("");
 
   const getCategoryById = (categoryId) => {
-    return categories.find(cat => cat.Id === categoryId);
+return categories.find(cat => cat.Id === categoryId);
   };
 
   const filteredExpenses = expenses.filter(expense => {
-    const category = getCategoryById(expense.categoryId);
+    const category = getCategoryById(expense.category_id_c);
     if (!category) return false;
     
     const searchLower = filter.toLowerCase();
     return (
-      category.name.toLowerCase().includes(searchLower) ||
-      (expense.note && expense.note.toLowerCase().includes(searchLower)) ||
-      formatCurrency(expense.amount).toLowerCase().includes(searchLower)
+      category.name_c.toLowerCase().includes(searchLower) ||
+      (expense.note_c && expense.note_c.toLowerCase().includes(searchLower)) ||
+      formatCurrency(expense.amount_c).toLowerCase().includes(searchLower)
     );
   });
 
   const handleEdit = (expense) => {
-    setEditingId(expense.Id);
-    setEditAmount(expense.amount.toString());
-    setEditNote(expense.note || "");
+setEditingId(expense.Id);
+    setEditAmount(expense.amount_c.toString());
+    setEditNote(expense.note_c || "");
   };
 
   const handleSaveEdit = async (expense) => {
-    if (!editAmount || parseFloat(editAmount) <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
-
     try {
+      const amount = parseFloat(editAmount);
+      if (isNaN(amount) || amount <= 0) {
+        toast.error("Please enter a valid amount");
+        return;
+      }
       await onEdit(expense.Id, {
-        amount: parseFloat(editAmount),
-        note: editNote.trim(),
+        amount_c: parseFloat(editAmount),
+        note_c: editNote.trim(),
       });
       setEditingId(null);
       toast.success("Expense updated successfully!");
@@ -120,105 +120,105 @@ const ExpenseList = ({ expenses, categories, onEdit, onDelete }) => {
               </p>
             </motion.div>
           ) : (
-            filteredExpenses.map((expense, index) => {
-              const category = getCategoryById(expense.categoryId);
+filteredExpenses.map((expense, index) => {
+              const category = getCategoryById(expense.category_id_c);
               if (!category) return null;
 
               const isEditing = editingId === expense.Id;
-
               return (
                 <motion.div
                   key={expense.Id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="p-4 border border-slate-200 rounded-lg hover:border-slate-300 hover:shadow-sm transition-all duration-150"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: -100 }}
+                  className="bg-white p-4 rounded-lg shadow-card hover:shadow-card-hover transition-shadow"
                 >
-                  {isEditing ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1">
-                          <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-medium">
-                              $
-                            </span>
-                            <Input
-                              type="number"
-                              value={editAmount}
-                              onChange={(e) => setEditAmount(e.target.value)}
-                              step="0.01"
-                              min="0"
-                              className="pl-7"
-                              autoFocus
-                            />
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      {category && <CategoryBadge category={category} size="sm" />}
+                      <div className="flex-1 min-w-0">
+                        {isEditing ? (
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-1">
+                                Amount
+                              </label>
+                              <Input
+                                type="number"
+                                value={editAmount}
+                                onChange={(e) => setEditAmount(e.target.value)}
+                                min="0"
+                                step="0.01"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-1">
+                                Note
+                              </label>
+                              <Input
+                                value={editNote}
+                                onChange={(e) => setEditNote(e.target.value)}
+                                placeholder="Add a note..."
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => handleSaveEdit(expense)}
+                              >
+                                <ApperIcon name="Check" size={14} />
+                                Save
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleCancelEdit}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                        <CategoryBadge category={category} />
+                        ) : (
+                          <div>
+                            <div className="flex items-baseline gap-2 mb-1">
+                              <span className="font-semibold text-lg">
+                                {formatCurrency(expense.amount_c)}
+                              </span>
+                              <span className="text-sm text-slate-500">
+                                {formatDate(expense.date_c)}
+                              </span>
+                            </div>
+                            {expense.note_c && (
+                              <p className="text-sm text-slate-600 mt-1">
+                                {expense.note_c}
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <Input
-                        type="text"
-                        value={editNote}
-                        onChange={(e) => setEditNote(e.target.value)}
-                        placeholder="Add a note..."
-                        maxLength={100}
-                      />
-                      <div className="flex items-center gap-2 justify-end">
+                    </div>
+                    {!isEditing && (
+                      <div className="flex gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={handleCancelEdit}
+                          onClick={() => handleEdit(expense)}
+                          className="p-1.5 text-slate-600 hover:bg-slate-100"
                         >
-                          Cancel
+                          <ApperIcon name="Edit2" size={16} />
                         </Button>
                         <Button
-                          variant="primary"
+                          variant="ghost"
                           size="sm"
-                          onClick={() => handleSaveEdit(expense)}
+                          onClick={() => handleDelete(expense.Id)}
+                          className="p-1.5 text-error hover:bg-error/10"
                         >
-                          Save
+                          <ApperIcon name="Trash2" size={16} />
                         </Button>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <CategoryBadge category={category} />
-                          <span className="text-sm text-slate-500">
-                            {formatDate(expense.date)}
-                          </span>
-                        </div>
-                        {expense.note && (
-                          <p className="text-sm text-slate-600 truncate">{expense.note}</p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 ml-4">
-                        <span className="text-lg font-bold font-display text-slate-900 whitespace-nowrap">
-                          {formatCurrency(expense.amount)}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(expense)}
-                            className="p-1.5"
-                          >
-                            <ApperIcon name="Pencil" size={16} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(expense.Id)}
-                            className="p-1.5 text-error hover:bg-error/10"
-                          >
-                            <ApperIcon name="Trash2" size={16} />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
+                    )}
+                  </div>
+</motion.div>
               );
             })
           )}

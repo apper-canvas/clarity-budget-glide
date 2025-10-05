@@ -1,34 +1,31 @@
-import { useState, useEffect } from "react";
-import Card from "@/components/atoms/Card";
-import ApperIcon from "@/components/ApperIcon";
+import React, { useEffect, useState } from "react";
 import ReactApexChart from "react-apexcharts";
+import ApperIcon from "@/components/ApperIcon";
+import Card from "@/components/atoms/Card";
 import { formatCurrency } from "@/utils/formatters";
 
 const SpendingChart = ({ data, title, type = "donut" }) => {
   const [chartData, setChartData] = useState({ series: [], labels: [] });
 
-  useEffect(() => {
+useEffect(() => {
     if (data && data.length > 0) {
       const series = data.map(item => item.value);
       const labels = data.map(item => item.label);
-      setChartData({ series, labels });
+
+      setChartData({
+        series,
+        labels,
+      });
     }
   }, [data]);
 
   const options = {
     chart: {
-      type: type,
-      animations: {
-        enabled: true,
-        easing: "easeinout",
-        speed: 500,
-      },
-      toolbar: {
-        show: false,
-      },
+      type,
+      toolbar: { show: false },
     },
     labels: chartData.labels,
-    colors: data.map(item => item.color || "#8B5CF6"),
+    colors: data?.map(item => item.color || "#8B5CF6") || [],
     legend: {
       position: "bottom",
       horizontalAlign: "center",
@@ -112,7 +109,6 @@ const SpendingChart = ({ data, title, type = "donut" }) => {
       colors: ["#fff"],
     },
   };
-
   if (!data || data.length === 0) {
     return (
       <Card className="p-6">

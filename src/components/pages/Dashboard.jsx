@@ -16,11 +16,6 @@ import ApperIcon from "@/components/ApperIcon";
 import Button from "@/components/atoms/Button";
 import Card from "@/components/atoms/Card";
 import { toast } from "react-toastify";
-const { ApperClient } = window.ApperSDK;
-const apperClient = new ApperClient({
-  apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
-  apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
-});
 const Dashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString());
   const [categories, setCategories] = useState([]);
@@ -42,7 +37,7 @@ const Dashboard = () => {
     });
     setApperClient(client);
   }, []);
-  const loadData = async () => {
+const loadData = async () => {
     try {
       setLoading(true);
       setError("");
@@ -57,9 +52,9 @@ const Dashboard = () => {
 
       const budgetsWithSpending = categoriesData.map(category => {
         const categoryExpenses = expensesData.filter(
-          exp => exp.categoryId === category.Id
+          exp => exp.category_id_c === category.Id
         );
-        const spent = categoryExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+        const spent = categoryExpenses.reduce((sum, exp) => sum + exp.amount_c, 0);
         return {
           ...category,
           spent,
@@ -69,6 +64,7 @@ const Dashboard = () => {
       setBudgets(budgetsWithSpending);
     } catch (err) {
       setError(err.message || "Failed to load dashboard data");
+      toast.error(err.message || "Failed to load dashboard data");
     } finally {
       setLoading(false);
     }
@@ -80,7 +76,7 @@ useEffect(() => {
     setSummaryError("");
   }, [selectedMonth]);
 
-  const generateAISummary = async () => {
+const generateAISummary = async () => {
     if (!apperClient) {
       toast.error("ApperClient not initialized");
       return;
@@ -96,10 +92,10 @@ useEffect(() => {
       setSummaryError("");
       
       const expensesWithCategories = expenses.map(exp => {
-        const category = categories.find(cat => cat.Id === exp.categoryId);
+        const category = categories.find(cat => cat.Id === exp.category_id_c);
         return {
           ...exp,
-          categoryName: category?.name || 'Uncategorized'
+          categoryName: category?.name_c || 'Uncategorized'
         };
       });
 
@@ -136,14 +132,14 @@ useEffect(() => {
     }
   };
 
-  const loadPreviousMonth = async () => {
+const loadPreviousMonth = async () => {
     try {
       const prevExpenses = await expenseService.getByMonth(previousMonthKey);
       const prevData = categories.map(category => {
         const categoryExpenses = prevExpenses.filter(
-          exp => exp.categoryId === category.Id
+          exp => exp.category_id_c === category.Id
         );
-        const spent = categoryExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+        const spent = categoryExpenses.reduce((sum, exp) => sum + exp.amount_c, 0);
         return {
           categoryId: category.Id,
           spent,
@@ -161,19 +157,45 @@ useEffect(() => {
     }
   }, [selectedMonth, categories]);
 
-  const handleAddExpense = async (expenseData) => {
-    await expenseService.create(expenseData);
-    await loadData();
+const handleAddExpense = async (expenseData) => {
+    try {
+      await expenseService.create(expenseData);
+      await loadData();
+      toast.success("Expense added successfully!");
+    } catch (error) {
+      toast.error(error.message || "Failed to add expense");
+    }
   };
 
   const handleEditExpense = async (id, data) => {
-    await expenseService.update(id, data);
-    await loadData();
+    try {
+      await expenseService.update(id, data);
+      await loadData();
+      toast.success("Expense updated successfully!");
+    } catch (error) {
+      toast.error(error.message || "Failed to update expense");
+    }
   };
 
   const handleDeleteExpense = async (id) => {
-    await expenseService.delete(id);
-    await loadData();
+    try {
+      await expenseService.delete(id);
+      await loadData();
+      toast.success("Expense deleted successfully!");
+    } catch (error) {
+      toast.error(error.message || "Failed to delete expense");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const { ApperUI } = window.ApperSDK;
+      await ApperUI.logout();
+      toast.success("Logged out successfully");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      toast.error("Logout failed");
+    }
   };
 
   const handleMonthChange = (newMonth) => {
@@ -209,8 +231,7 @@ useEffect(() => {
       </div>
     );
   }
-
-  const totalBudget = budgets.reduce((sum, b) => sum + b.monthlyLimit, 0);
+const totalBudget = budgets.reduce((sum, b) => sum + b.monthly_limit_c, 0);
   const totalSpent = budgets.reduce((sum, b) => sum + b.spent, 0);
   const totalRemaining = totalBudget - totalSpent;
   const overallPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
@@ -221,23 +242,23 @@ useEffect(() => {
     return "success";
   };
 
-const chartData = budgets
+  const chartData = budgets
     .filter(b => b.spent > 0)
     .map(b => ({
-      label: b.name,
+      label: b.name_c,
       value: b.spent,
-      color: b.color,
+      color: b.color_c,
     }));
   const currentMonthData = budgets.map(b => ({
     categoryId: b.Id,
     spent: b.spent,
-}));
+  }));
 
   const previousMonthKey = getMonthKey(getPreviousMonth(selectedMonth));
   return (
 <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto p-6 space-y-6">
-        <motion.div
+<motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
@@ -247,6 +268,17 @@ const chartData = budgets
               Clarity Budget
             </h1>
             <p className="text-slate-600">Track your spending with ease</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <ApperIcon name="LogOut" size={16} />
+              Logout
+            </Button>
           </div>
           <div className="flex items-center gap-3">
             <MonthSelector value={selectedMonth} onChange={handleMonthChange} />

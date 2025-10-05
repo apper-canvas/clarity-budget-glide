@@ -9,8 +9,8 @@ import Button from "@/components/atoms/Button";
 
 const ExpenseForm = ({ categories, onSubmit, apperClient }) => {
 const [formData, setFormData] = useState({
-    amount: "",
-    categoryId: categories.length > 0 ? categories[0].Id : "",
+amount: "",
+    category_id_c: categories.length > 0 ? categories[0].Id : "",
     date: new Date().toISOString().split("T")[0],
     note: "",
   });
@@ -33,8 +33,8 @@ const validate = () => {
       newErrors.amount = "Please enter a valid amount";
     }
     
-    if (!formData.categoryId) {
-      newErrors.categoryId = "Please select a category";
+    if (!formData.category_id_c) {
+      newErrors.category_id_c = "Please select a category";
     }
     
     if (!formData.date) {
@@ -45,18 +45,18 @@ const validate = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleGenerateDescription = async () => {
+const handleGenerateDescription = async () => {
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
       toast.error("Please enter an amount first");
       return;
     }
 
-    if (!formData.categoryId) {
+    if (!formData.category_id_c) {
       toast.error("Please select a category first");
       return;
     }
 
-    const selectedCategory = categories.find(cat => cat.Id === parseInt(formData.categoryId));
+const selectedCategory = categories.find(cat => cat.Id === parseInt(formData.category_id_c));
     if (!selectedCategory) {
       toast.error("Invalid category selected");
       return;
@@ -69,8 +69,8 @@ const validate = () => {
         import.meta.env.VITE_GENERATE_EXPENSE_DESCRIPTION,
         {
           body: JSON.stringify({
-            amount: parseFloat(formData.amount),
-            categoryName: selectedCategory.name
+amount: parseFloat(formData.amount),
+            categoryName: selectedCategory.name_c
           }),
           headers: {
             'Content-Type': 'application/json'
@@ -106,17 +106,18 @@ const handleSubmit = async (e) => {
       return;
     }
 
-    try {
+try {
       await onSubmit({
-        amount: parseFloat(formData.amount),
-        categoryId: parseInt(formData.categoryId),
-        date: new Date(formData.date).toISOString(),
-        note: formData.note.trim(),
+amount_c: parseFloat(formData.amount),
+        category_id_c: parseInt(formData.category_id_c),
+        date_c: formData.date,
+        note_c: formData.note.trim(),
+        created_at_c: new Date().toISOString()
       });
 
       setFormData({
         amount: "",
-        categoryId: categories.length > 0 ? categories[0].Id : "",
+        category_id_c: categories.length > 0 ? categories[0].Id : "",
         date: new Date().toISOString().split("T")[0],
         note: "",
       });
@@ -161,22 +162,22 @@ const handleSubmit = async (e) => {
             )}
           </div>
 
-          <div>
+<div>
             <Label required>Category</Label>
             <Select
-              name="categoryId"
-              value={formData.categoryId}
+              name="category_id_c"
+              value={formData.category_id_c}
               onChange={handleChange}
-              error={errors.categoryId}
+              error={errors.category_id_c}
             >
               {categories.map(category => (
-                <option key={category.Id} value={category.Id}>
-                  {category.name}
+<option key={category.Id} value={category.Id}>
+                  {category.name_c}
                 </option>
               ))}
             </Select>
-            {errors.categoryId && (
-              <p className="text-sm text-error mt-1">{errors.categoryId}</p>
+            {errors.category_id_c && (
+              <p className="text-sm text-error mt-1">{errors.category_id_c}</p>
             )}
           </div>
         </div>
@@ -209,12 +210,12 @@ const handleSubmit = async (e) => {
                 maxLength={100}
                 disabled={generatingDescription}
               />
-              <Button
+<Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={handleGenerateDescription}
-                disabled={generatingDescription || !formData.amount || !formData.categoryId}
+                disabled={generatingDescription || !formData.amount || !formData.category_id_c}
                 className="px-3 shrink-0"
                 title="Generate description with AI"
               >

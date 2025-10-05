@@ -9,7 +9,7 @@ const ComparisonChart = ({ currentMonth, previousMonth, categories }) => {
 
   useEffect(() => {
     if (currentMonth && previousMonth && categories) {
-      const categoryNames = categories.map(cat => cat.name);
+const categoryNames = categories.map(cat => cat.name_c);
       const currentData = categories.map(cat => {
         const item = currentMonth.find(m => m.categoryId === cat.Id);
         return item ? item.spent : 0;

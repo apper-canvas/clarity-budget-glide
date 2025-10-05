@@ -14,19 +14,19 @@ const CategoryBadge = ({ category, size = "md" }) => {
     lg: 16,
   };
 
-  return (
+return (
     <span
       className={cn(
         "inline-flex items-center rounded-full font-medium",
         sizes[size]
       )}
       style={{
-        backgroundColor: `${category.color}15`,
-        color: category.color,
+        backgroundColor: `${category.color_c}15`,
+        color: category.color_c,
       }}
     >
-      <ApperIcon name={category.icon} size={iconSizes[size]} />
-      <span>{category.name}</span>
+      <ApperIcon name={category.icon_c} size={iconSizes[size]} />
+      <span>{category.name_c}</span>
     </span>
   );
 };
